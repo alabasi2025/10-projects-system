@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://3002-icm3bvzn6jwu13sumw1uk-47e3f03e.manusvm.computer/api/v1',
+  apiUrl: 'https://3000-ibq9j7z5elem704nz1jlc-daa44c72.manusvm.computer/api/v1',
 };

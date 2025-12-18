@@ -1,0 +1,718 @@
+.wbs-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+// رأس الصفحة
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+
+  .header-content {
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+
+      .arrow {
+        font-size: 18px;
+      }
+    }
+
+    .title-section {
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 8px 0;
+      }
+
+      .project-info {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0;
+
+        .project-number {
+          font-weight: 600;
+          color: #3b82f6;
+        }
+
+        .separator {
+          margin: 0 8px;
+        }
+      }
+    }
+  }
+
+  .add-phase-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+    }
+
+    .icon {
+      font-size: 20px;
+    }
+  }
+}
+
+// الإحصائيات
+.statistics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e5e7eb;
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      font-size: 24px;
+
+      &.phases { background: #dbeafe; }
+      &.progress { background: #d1fae5; }
+      &.budget { background: #fef3c7; }
+      &.spent { background: #fee2e2; }
+    }
+
+    .stat-content {
+      display: flex;
+      flex-direction: column;
+
+      .stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #111827;
+      }
+
+      .stat-label {
+        font-size: 13px;
+        color: #6b7280;
+      }
+    }
+  }
+}
+
+// حالات التحميل والخطأ
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  p {
+    color: #6b7280;
+    margin: 16px 0;
+  }
+
+  button {
+    padding: 10px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover {
+      background: #2563eb;
+    }
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// شجرة WBS
+.wbs-tree {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 20px;
+    color: #374151;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    color: #6b7280;
+    margin: 0 0 20px 0;
+  }
+
+  .add-btn {
+    padding: 12px 24px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+
+    &:hover {
+      background: #2563eb;
+    }
+  }
+}
+
+// عنصر المرحلة
+.phase-item {
+  border-bottom: 1px solid #e5e7eb;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.selected .phase-header {
+    background: #eff6ff;
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #f9fafb;
+    }
+
+    .expand-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      color: #6b7280;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    .phase-number {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .phase-info {
+      flex: 1;
+      min-width: 0;
+
+      .phase-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 4px 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .phase-dates {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+      }
+    }
+
+    .phase-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .phase-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 120px;
+
+      .progress-bar {
+        flex: 1;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #10b981, #059669);
+          border-radius: 4px;
+          transition: width 0.3s;
+        }
+      }
+
+      .progress-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        min-width: 40px;
+        text-align: left;
+      }
+    }
+
+    .phase-budget {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 120px;
+
+      .budget-allocated {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .budget-spent {
+        font-size: 12px;
+        color: #6b7280;
+      }
+    }
+
+    .phase-actions {
+      display: flex;
+      gap: 8px;
+
+      .action-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+
+        &.add {
+          background: #d1fae5;
+          color: #059669;
+
+          &:hover {
+            background: #a7f3d0;
+          }
+        }
+
+        &.delete {
+          background: #fee2e2;
+          color: #dc2626;
+
+          &:hover {
+            background: #fecaca;
+          }
+        }
+      }
+    }
+  }
+}
+
+// حزم العمل
+.work-packages {
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  padding: 12px 20px 12px 60px;
+
+  .empty-wp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: white;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
+
+    p {
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .add-wp-btn {
+      padding: 8px 16px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+
+  .wp-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    &:hover {
+      border-color: #3b82f6;
+    }
+
+    &.selected {
+      background: #eff6ff;
+      border-color: #3b82f6;
+    }
+
+    .wp-number {
+      padding: 4px 10px;
+      background: #f3f4f6;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .wp-info {
+      flex: 1;
+      min-width: 0;
+
+      .wp-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin: 0 0 2px 0;
+      }
+
+      .wp-dates {
+        font-size: 12px;
+        color: #6b7280;
+        margin: 0;
+      }
+    }
+
+    .wp-status {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .wp-progress {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100px;
+
+      .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: #e5e7eb;
+        border-radius: 3px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          background: #10b981;
+          border-radius: 3px;
+        }
+      }
+
+      .progress-text {
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+      }
+    }
+
+    .wp-cost {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      min-width: 100px;
+
+      .cost-estimated {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .cost-actual {
+        font-size: 11px;
+        color: #6b7280;
+      }
+    }
+
+    .wp-actions {
+      .action-btn {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        background: #fee2e2;
+        color: #dc2626;
+
+        &:hover {
+          background: #fecaca;
+        }
+      }
+    }
+  }
+}
+
+// النوافذ المنبثقة
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      font-size: 24px;
+      color: #6b7280;
+      cursor: pointer;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 24px;
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+      }
+
+      textarea {
+        resize: vertical;
+      }
+    }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 16px 16px;
+
+    .cancel-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+
+      &:hover {
+        background: #f3f4f6;
+      }
+    }
+
+    .save-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+
+      &:hover {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      }
+    }
+  }
+}

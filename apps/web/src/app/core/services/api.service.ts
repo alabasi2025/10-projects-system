@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { isPlatformServer } from '@angular/common';
 import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -8,9 +9,17 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root',
 })
 export class ApiService {
-  private baseUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
+  private http = inject(HttpClient);
+  private platformId = inject(PLATFORM_ID);
+  
+  private get baseUrl(): string {
+    // في SSR، استخدم العنوان الكامل للـ API
+    if (isPlatformServer(this.platformId)) {
+      return 'http://localhost:3004/api/v1';
+    }
+    // في المتصفح، استخدم المسار النسبي
+    return environment.apiUrl;
+  }
 
   /**
    * GET request

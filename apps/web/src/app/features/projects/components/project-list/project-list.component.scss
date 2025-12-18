@@ -93,6 +93,15 @@ $border-color: #e5e7eb;
     }
   }
 
+  &.btn-success {
+    background-color: $success-color;
+    color: white;
+
+    &:hover {
+      background-color: darken($success-color, 10%);
+    }
+  }
+
   &.btn-sm {
     padding: 6px 12px;
     font-size: 13px;

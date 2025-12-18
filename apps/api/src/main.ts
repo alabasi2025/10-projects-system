@@ -11,6 +11,9 @@ import { AppModule } from './app/app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // إضافة البادئة العامة لجميع المسارات
+  app.setGlobalPrefix('api/v1');
+
   // تفعيل CORS
   app.enableCors({
     origin: true, // قبول جميع المصادر

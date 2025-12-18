@@ -167,8 +167,11 @@
             </div>
 
             <div class="card-footer">
-              <a [routerLink]="['/projects', project.id]" class="btn btn-sm btn-secondary">
-                عرض التفاصيل
+              <a [routerLink]="['/projects', project.id, 'wbs']" class="btn btn-sm btn-primary" title="تجزئة العمل">
+                📁 WBS
+              </a>
+              <a [routerLink]="['/projects', project.id, 'budget']" class="btn btn-sm btn-success" title="الميزانية">
+                💰 الميزانية
               </a>
               <a [routerLink]="['/projects', project.id, 'edit']" class="btn btn-sm btn-outline">
                 تعديل

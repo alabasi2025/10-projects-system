@@ -22,7 +22,7 @@ import { ProjectsService } from './projects.service';
 import { CreateProjectDto, UpdateProjectDto, QueryProjectsDto } from './dto';
 
 @ApiTags('المشاريع - Projects')
-@Controller('api/v1/projects')
+@Controller('projects')
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 

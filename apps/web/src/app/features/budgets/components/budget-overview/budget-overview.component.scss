@@ -1,0 +1,665 @@
+.budget-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+// رأس الصفحة
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+
+  .header-content {
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #374151;
+      margin-bottom: 12px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    .title-section {
+      h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 8px 0;
+      }
+
+      .project-info {
+        font-size: 14px;
+        color: #6b7280;
+        margin: 0;
+
+        .project-number {
+          font-weight: 600;
+          color: #3b82f6;
+        }
+
+        .separator {
+          margin: 0 8px;
+        }
+      }
+    }
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 12px;
+
+    .wbs-btn {
+      padding: 12px 20px;
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+
+    .add-expense-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      }
+
+      .icon {
+        font-size: 20px;
+      }
+    }
+  }
+}
+
+// حالات التحميل والخطأ
+.loading-state,
+.error-state,
+.no-budget-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  text-align: center;
+
+  .no-budget-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    font-size: 20px;
+    color: #374151;
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    color: #6b7280;
+    margin: 0 0 20px 0;
+  }
+
+  button {
+    padding: 12px 24px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: #2563eb;
+    }
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// نظرة عامة على الميزانية
+.budget-overview {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.budget-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+
+  &.main {
+    .budget-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+
+      h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+      }
+
+      .budget-version {
+        padding: 6px 12px;
+        background: #eff6ff;
+        color: #3b82f6;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+    }
+
+    .budget-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+
+      .stat-item {
+        text-align: center;
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 12px;
+
+        .stat-label {
+          display: block;
+          font-size: 13px;
+          color: #6b7280;
+          margin-bottom: 8px;
+        }
+
+        .stat-value {
+          display: block;
+          font-size: 18px;
+          font-weight: 700;
+
+          &.original { color: #3b82f6; }
+          &.adjustments {
+            &.positive { color: #10b981; }
+            &.negative { color: #ef4444; }
+          }
+          &.current { color: #111827; }
+        }
+      }
+    }
+
+    .budget-progress {
+      margin-bottom: 24px;
+
+      .progress-row {
+        margin-bottom: 16px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .progress-info {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 8px;
+
+          .progress-label {
+            font-size: 14px;
+            color: #374151;
+          }
+
+          .progress-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #111827;
+          }
+        }
+
+        .progress-bar {
+          height: 12px;
+          background: #e5e7eb;
+          border-radius: 6px;
+          overflow: hidden;
+
+          .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.3s;
+
+            &.spent {
+              background: linear-gradient(90deg, #ef4444, #dc2626);
+            }
+
+            &.committed {
+              background: linear-gradient(90deg, #f59e0b, #d97706);
+            }
+          }
+        }
+      }
+    }
+
+    .budget-remaining {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: #f0fdf4;
+      border-radius: 12px;
+      border: 1px solid #bbf7d0;
+
+      .remaining-label {
+        font-size: 16px;
+        font-weight: 600;
+        color: #166534;
+      }
+
+      .remaining-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #166534;
+
+        &.warning {
+          color: #d97706;
+        }
+
+        &.danger {
+          color: #dc2626;
+        }
+      }
+    }
+  }
+
+  &.expenses-summary {
+    h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0 0 20px 0;
+    }
+
+    .expense-types {
+      .expense-type-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f3f4f6;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .type-color {
+          width: 12px;
+          height: 12px;
+          border-radius: 3px;
+        }
+
+        .type-label {
+          flex: 1;
+          font-size: 14px;
+          color: #374151;
+        }
+
+        .type-amount {
+          font-size: 14px;
+          font-weight: 600;
+          color: #111827;
+        }
+
+        .type-count {
+          font-size: 12px;
+          color: #6b7280;
+        }
+      }
+    }
+
+    .total-expenses {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 2px solid #e5e7eb;
+
+      span {
+        font-size: 14px;
+        color: #6b7280;
+      }
+
+      strong {
+        font-size: 18px;
+        color: #111827;
+      }
+    }
+  }
+}
+
+// قسم المصروفات
+.expenses-section {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .expenses-count {
+      padding: 6px 12px;
+      background: #f3f4f6;
+      border-radius: 20px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+  }
+
+  .empty-expenses {
+    text-align: center;
+    padding: 40px;
+
+    p {
+      color: #6b7280;
+      margin: 0 0 16px 0;
+    }
+
+    .add-btn {
+      padding: 10px 20px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+
+      &:hover {
+        background: #2563eb;
+      }
+    }
+  }
+}
+
+.expenses-table {
+  overflow-x: auto;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th, td {
+      padding: 12px 16px;
+      text-align: right;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 13px;
+    }
+
+    td {
+      font-size: 14px;
+      color: #111827;
+    }
+
+    .expense-type-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .amount-cell {
+      font-weight: 600;
+      color: #dc2626;
+    }
+
+    .delete-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fee2e2;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+
+      &:hover {
+        background: #fecaca;
+      }
+    }
+  }
+}
+
+// النوافذ المنبثقة
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
+
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+      margin: 0;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      border: none;
+      border-radius: 8px;
+      font-size: 24px;
+      color: #6b7280;
+      cursor: pointer;
+
+      &:hover {
+        background: #e5e7eb;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: 24px;
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+
+      @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+
+      label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &:disabled {
+          background: #f3f4f6;
+          cursor: not-allowed;
+        }
+      }
+
+      textarea {
+        resize: vertical;
+      }
+
+      &.checkbox-group {
+        label {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          cursor: pointer;
+
+          input[type="checkbox"] {
+            width: auto;
+          }
+        }
+      }
+    }
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    border-radius: 0 0 16px 16px;
+
+    .cancel-btn {
+      padding: 10px 20px;
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      cursor: pointer;
+
+      &:hover {
+        background: #f3f4f6;
+      }
+    }
+
+    .save-btn {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+
+      &:hover {
+        background: linear-gradient(135deg, #059669, #047857);
+      }
+    }
+  }
+}

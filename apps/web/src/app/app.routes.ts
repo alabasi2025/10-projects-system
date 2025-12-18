@@ -30,6 +30,20 @@ export const appRoutes: Route[] = [
             (m) => m.ProjectFormComponent
           ),
       },
+      {
+        path: ':projectId/wbs',
+        loadComponent: () =>
+          import('./features/wbs/components/wbs-tree/wbs-tree.component').then(
+            (m) => m.WbsTreeComponent
+          ),
+      },
+      {
+        path: ':projectId/budget',
+        loadComponent: () =>
+          import('./features/budgets/components/budget-overview/budget-overview.component').then(
+            (m) => m.BudgetOverviewComponent
+          ),
+      },
     ],
   },
   {

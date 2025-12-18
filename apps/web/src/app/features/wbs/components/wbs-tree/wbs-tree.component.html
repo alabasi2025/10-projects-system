@@ -1,0 +1,297 @@
+<div class="wbs-container" dir="rtl">
+  <!-- رأس الصفحة -->
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        <span class="arrow">←</span>
+        العودة للمشاريع
+      </button>
+      <div class="title-section">
+        <h1>تجزئة العمل (WBS)</h1>
+        @if (project) {
+          <p class="project-info">
+            <span class="project-number">{{ project.projectNumber }}</span>
+            <span class="separator">|</span>
+            <span class="project-name">{{ project.name }}</span>
+          </p>
+        }
+      </div>
+    </div>
+    <button class="add-phase-btn" (click)="openPhaseForm()">
+      <span class="icon">+</span>
+      إضافة مرحلة
+    </button>
+  </div>
+
+  <!-- إحصائيات -->
+  @if (statistics) {
+    <div class="statistics-grid">
+      <div class="stat-card">
+        <div class="stat-icon phases">📋</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics.total }}</span>
+          <span class="stat-label">إجمالي المراحل</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon progress">📊</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics.averageProgress | number:'1.0-0' }}%</span>
+          <span class="stat-label">متوسط الإنجاز</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon budget">💰</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatCurrency(statistics.budget.totalAllocated) }}</span>
+          <span class="stat-label">الميزانية المخصصة</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon spent">💸</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatCurrency(statistics.budget.totalSpent) }}</span>
+          <span class="stat-label">المصروف</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- حالة التحميل -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>جاري تحميل تجزئة العمل...</p>
+    </div>
+  }
+
+  <!-- حالة الخطأ -->
+  @if (error) {
+    <div class="error-state">
+      <p>{{ error }}</p>
+      <button (click)="loadProjectData(project?.id || '')">إعادة المحاولة</button>
+    </div>
+  }
+
+  <!-- شجرة WBS -->
+  @if (!loading && !error) {
+    <div class="wbs-tree">
+      @if (phases.length === 0) {
+        <div class="empty-state">
+          <div class="empty-icon">📁</div>
+          <h3>لا توجد مراحل</h3>
+          <p>ابدأ بإضافة المرحلة الأولى للمشروع</p>
+          <button class="add-btn" (click)="openPhaseForm()">إضافة مرحلة</button>
+        </div>
+      } @else {
+        <!-- قائمة المراحل -->
+        @for (phase of phases; track phase.id) {
+          <div class="phase-item" [class.expanded]="isPhaseExpanded(phase.id)" [class.selected]="isSelected('phase', phase.id)">
+            <!-- رأس المرحلة -->
+            <div class="phase-header" (click)="selectItem('phase', phase.id)">
+              <button class="expand-btn" (click)="togglePhase(phase.id); $event.stopPropagation()">
+                {{ isPhaseExpanded(phase.id) ? '▼' : '◀' }}
+              </button>
+              <div class="phase-number">{{ phase.phaseNumber }}</div>
+              <div class="phase-info">
+                <h3 class="phase-name">{{ phase.name }}</h3>
+                <p class="phase-dates">
+                  {{ formatDate(phase.plannedStartDate) }} - {{ formatDate(phase.plannedEndDate) }}
+                </p>
+              </div>
+              <div class="phase-status" [style.background-color]="getStatusColor(phase.status)">
+                {{ getStatusLabel(phase.status) }}
+              </div>
+              <div class="phase-progress">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width.%]="phase.progressPercent"></div>
+                </div>
+                <span class="progress-text">{{ phase.progressPercent }}%</span>
+              </div>
+              <div class="phase-budget">
+                <span class="budget-allocated">{{ formatCurrency(phase.allocatedBudget) }}</span>
+                <span class="budget-spent">{{ formatCurrency(phase.spentAmount) }} مصروف</span>
+              </div>
+              <div class="phase-actions">
+                <button class="action-btn add" (click)="openWorkPackageForm(phase.id); $event.stopPropagation()" title="إضافة حزمة عمل">
+                  +
+                </button>
+                <button class="action-btn delete" (click)="deletePhase(phase); $event.stopPropagation()" title="حذف المرحلة">
+                  🗑
+                </button>
+              </div>
+            </div>
+
+            <!-- حزم العمل -->
+            @if (isPhaseExpanded(phase.id)) {
+              <div class="work-packages">
+                @if (!phase.workPackages || phase.workPackages.length === 0) {
+                  <div class="empty-wp">
+                    <p>لا توجد حزم عمل</p>
+                    <button class="add-wp-btn" (click)="openWorkPackageForm(phase.id)">
+                      إضافة حزمة عمل
+                    </button>
+                  </div>
+                } @else {
+                  @for (wp of phase.workPackages; track wp.id) {
+                    <div class="wp-item" [class.selected]="isSelected('work-package', wp.id)" (click)="selectItem('work-package', wp.id)">
+                      <div class="wp-number">{{ wp.packageNumber }}</div>
+                      <div class="wp-info">
+                        <h4 class="wp-name">{{ wp.name }}</h4>
+                        <p class="wp-dates">
+                          {{ formatDate(wp.plannedStartDate) }} - {{ formatDate(wp.plannedEndDate) }}
+                        </p>
+                      </div>
+                      <div class="wp-status" [style.background-color]="getStatusColor(wp.status)">
+                        {{ getStatusLabel(wp.status) }}
+                      </div>
+                      <div class="wp-progress">
+                        <div class="progress-bar">
+                          <div class="progress-fill" [style.width.%]="wp.progressPercent"></div>
+                        </div>
+                        <span class="progress-text">{{ wp.progressPercent }}%</span>
+                      </div>
+                      <div class="wp-cost">
+                        <span class="cost-estimated">{{ formatCurrency(wp.estimatedCost) }}</span>
+                        <span class="cost-actual">{{ formatCurrency(wp.actualCost) }} فعلي</span>
+                      </div>
+                      <div class="wp-actions">
+                        <button class="action-btn delete" (click)="deleteWorkPackage(wp); $event.stopPropagation()" title="حذف حزمة العمل">
+                          🗑
+                        </button>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- نموذج إضافة مرحلة -->
+  @if (showPhaseForm) {
+    <div class="modal-overlay" (click)="closePhaseForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>إضافة مرحلة جديدة</h2>
+          <button class="close-btn" (click)="closePhaseForm()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>رقم المرحلة *</label>
+              <input type="number" [(ngModel)]="phaseForm.phaseNumber" min="1" />
+            </div>
+            <div class="form-group">
+              <label>الترتيب</label>
+              <input type="number" [(ngModel)]="phaseForm.sequenceOrder" min="1" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>اسم المرحلة *</label>
+            <input type="text" [(ngModel)]="phaseForm.name" placeholder="مثال: مرحلة التصميم" />
+          </div>
+          <div class="form-group">
+            <label>الوصف</label>
+            <textarea [(ngModel)]="phaseForm.description" rows="3" placeholder="وصف تفصيلي للمرحلة..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>تاريخ البدء المخطط *</label>
+              <input type="date" [(ngModel)]="phaseForm.plannedStartDate" />
+            </div>
+            <div class="form-group">
+              <label>تاريخ الانتهاء المخطط *</label>
+              <input type="date" [(ngModel)]="phaseForm.plannedEndDate" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>الميزانية المخصصة</label>
+              <input type="number" [(ngModel)]="phaseForm.allocatedBudget" min="0" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>الحالة</label>
+              <select [(ngModel)]="phaseForm.status">
+                @for (status of phaseStatuses; track status.value) {
+                  <option [value]="status.value">{{ status.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>نسبة الإنجاز (%)</label>
+            <input type="number" [(ngModel)]="phaseForm.progressPercent" min="0" max="100" />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" (click)="closePhaseForm()">إلغاء</button>
+          <button class="save-btn" (click)="savePhase()">حفظ المرحلة</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- نموذج إضافة حزمة عمل -->
+  @if (showWorkPackageForm) {
+    <div class="modal-overlay" (click)="closeWorkPackageForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>إضافة حزمة عمل جديدة</h2>
+          <button class="close-btn" (click)="closeWorkPackageForm()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>رقم حزمة العمل *</label>
+              <input type="text" [(ngModel)]="workPackageForm.packageNumber" placeholder="WP-01-001" />
+            </div>
+            <div class="form-group">
+              <label>الحالة</label>
+              <select [(ngModel)]="workPackageForm.status">
+                @for (status of workPackageStatuses; track status.value) {
+                  <option [value]="status.value">{{ status.label }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>اسم حزمة العمل *</label>
+            <input type="text" [(ngModel)]="workPackageForm.name" placeholder="مثال: إعداد المخططات الهندسية" />
+          </div>
+          <div class="form-group">
+            <label>الوصف</label>
+            <textarea [(ngModel)]="workPackageForm.description" rows="3" placeholder="وصف تفصيلي لحزمة العمل..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>تاريخ البدء المخطط *</label>
+              <input type="date" [(ngModel)]="workPackageForm.plannedStartDate" />
+            </div>
+            <div class="form-group">
+              <label>تاريخ الانتهاء المخطط *</label>
+              <input type="date" [(ngModel)]="workPackageForm.plannedEndDate" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>التكلفة التقديرية</label>
+              <input type="number" [(ngModel)]="workPackageForm.estimatedCost" min="0" placeholder="0" />
+            </div>
+            <div class="form-group">
+              <label>نسبة الإنجاز (%)</label>
+              <input type="number" [(ngModel)]="workPackageForm.progressPercent" min="0" max="100" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" (click)="closeWorkPackageForm()">إلغاء</button>
+          <button class="save-btn" (click)="saveWorkPackage()">حفظ حزمة العمل</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

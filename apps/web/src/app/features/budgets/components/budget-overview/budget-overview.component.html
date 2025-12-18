@@ -1,0 +1,258 @@
+<div class="budget-container" dir="rtl">
+  <!-- رأس الصفحة -->
+  <div class="page-header">
+    <div class="header-content">
+      <button class="back-btn" (click)="goBack()">
+        <span class="arrow">←</span>
+        العودة للمشاريع
+      </button>
+      <div class="title-section">
+        <h1>الميزانية والمصروفات</h1>
+        @if (project) {
+          <p class="project-info">
+            <span class="project-number">{{ project.projectNumber }}</span>
+            <span class="separator">|</span>
+            <span class="project-name">{{ project.name }}</span>
+          </p>
+        }
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="wbs-btn" (click)="goToWbs()">
+        📁 تجزئة العمل
+      </button>
+      <button class="add-expense-btn" (click)="openExpenseForm()">
+        <span class="icon">+</span>
+        إضافة مصروف
+      </button>
+    </div>
+  </div>
+
+  <!-- حالة التحميل -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>جاري تحميل الميزانية...</p>
+    </div>
+  }
+
+  <!-- حالة الخطأ -->
+  @if (error) {
+    <div class="error-state">
+      <p>{{ error }}</p>
+      <button (click)="loadProjectData(project?.id || '')">إعادة المحاولة</button>
+    </div>
+  }
+
+  @if (!loading && !error) {
+    <!-- بطاقة الميزانية -->
+    @if (!budget) {
+      <div class="no-budget-card">
+        <div class="no-budget-icon">💰</div>
+        <h3>لا توجد ميزانية</h3>
+        <p>لم يتم إنشاء ميزانية لهذا المشروع بعد</p>
+        <button class="create-budget-btn" (click)="createBudget()">
+          إنشاء ميزانية
+        </button>
+      </div>
+    } @else {
+      <!-- نظرة عامة على الميزانية -->
+      <div class="budget-overview">
+        <div class="budget-card main">
+          <div class="budget-header">
+            <h2>نظرة عامة على الميزانية</h2>
+            <span class="budget-version">الإصدار {{ budget.budgetVersion }}</span>
+          </div>
+          
+          <div class="budget-stats">
+            <div class="stat-item">
+              <span class="stat-label">الميزانية الأصلية</span>
+              <span class="stat-value original">{{ formatCurrency(budget.originalBudget) }} ر.س</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">التعديلات</span>
+              <span class="stat-value adjustments" [class.positive]="budget.adjustments > 0" [class.negative]="budget.adjustments < 0">
+                {{ budget.adjustments >= 0 ? '+' : '' }}{{ formatCurrency(budget.adjustments) }} ر.س
+              </span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">الميزانية الحالية</span>
+              <span class="stat-value current">{{ formatCurrency(budget.currentBudget) }} ر.س</span>
+            </div>
+          </div>
+
+          <div class="budget-progress">
+            <div class="progress-row">
+              <div class="progress-info">
+                <span class="progress-label">المصروف</span>
+                <span class="progress-value">{{ formatCurrency(budget.spentAmount) }} ر.س ({{ spentPercentage }}%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill spent" [style.width.%]="spentPercentage"></div>
+              </div>
+            </div>
+            <div class="progress-row">
+              <div class="progress-info">
+                <span class="progress-label">الالتزامات</span>
+                <span class="progress-value">{{ formatCurrency(budget.committedAmount) }} ر.س ({{ committedPercentage }}%)</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill committed" [style.width.%]="committedPercentage"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="budget-remaining">
+            <span class="remaining-label">المتبقي</span>
+            <span class="remaining-value" [class.warning]="spentPercentage > 80" [class.danger]="spentPercentage > 95">
+              {{ formatCurrency(budget.remainingBudget) }} ر.س
+            </span>
+          </div>
+        </div>
+
+        <!-- إحصائيات المصروفات حسب النوع -->
+        @if (expenseStatistics) {
+          <div class="budget-card expenses-summary">
+            <h3>توزيع المصروفات</h3>
+            <div class="expense-types">
+              @for (type of expenseTypes; track type.value) {
+                <div class="expense-type-item">
+                  <div class="type-color" [style.background-color]="getExpenseTypeColor(type.value)"></div>
+                  <span class="type-label">{{ type.label }}</span>
+                  <span class="type-amount">
+                    {{ formatCurrency(expenseStatistics.byType[type.value]?.amount || 0) }} ر.س
+                  </span>
+                  <span class="type-count">
+                    ({{ expenseStatistics.byType[type.value]?.count || 0 }})
+                  </span>
+                </div>
+              }
+            </div>
+            <div class="total-expenses">
+              <span>إجمالي المصروفات:</span>
+              <strong>{{ formatCurrency(expenseStatistics.totalAmount) }} ر.س</strong>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- قائمة المصروفات -->
+      <div class="expenses-section">
+        <div class="section-header">
+          <h2>سجل المصروفات</h2>
+          <span class="expenses-count">{{ expenses.length }} مصروف</span>
+        </div>
+
+        @if (expenses.length === 0) {
+          <div class="empty-expenses">
+            <p>لا توجد مصروفات مسجلة</p>
+            <button class="add-btn" (click)="openExpenseForm()">إضافة مصروف</button>
+          </div>
+        } @else {
+          <div class="expenses-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>النوع</th>
+                  <th>الوصف</th>
+                  <th>المرحلة</th>
+                  <th>حزمة العمل</th>
+                  <th>المبلغ</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (expense of expenses; track expense.id) {
+                  <tr>
+                    <td>{{ formatDate(expense.expenseDate) }}</td>
+                    <td>
+                      <span class="expense-type-badge" [style.background-color]="getExpenseTypeColor(expense.expenseType)">
+                        {{ getExpenseTypeLabel(expense.expenseType) }}
+                      </span>
+                    </td>
+                    <td>{{ expense.description || '-' }}</td>
+                    <td>{{ expense.phase?.name || '-' }}</td>
+                    <td>{{ expense.workPackage?.name || '-' }}</td>
+                    <td class="amount-cell">{{ formatCurrency(expense.amount) }} ر.س</td>
+                    <td>
+                      <button class="delete-btn" (click)="deleteExpense(expense)" title="حذف">
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+  }
+
+  <!-- نموذج إضافة مصروف -->
+  @if (showExpenseForm) {
+    <div class="modal-overlay" (click)="closeExpenseForm()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>إضافة مصروف جديد</h2>
+          <button class="close-btn" (click)="closeExpenseForm()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>نوع المصروف *</label>
+              <select [(ngModel)]="expenseForm.expenseType">
+                @for (type of expenseTypes; track type.value) {
+                  <option [value]="type.value">{{ type.label }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>تاريخ المصروف *</label>
+              <input type="date" [(ngModel)]="expenseForm.expenseDate" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>المبلغ (ر.س) *</label>
+            <input type="number" [(ngModel)]="expenseForm.amount" min="0" placeholder="0" />
+          </div>
+          <div class="form-group">
+            <label>الوصف</label>
+            <textarea [(ngModel)]="expenseForm.description" rows="3" placeholder="وصف المصروف..."></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>المرحلة (اختياري)</label>
+              <select [(ngModel)]="expenseForm.phaseId" (ngModelChange)="onPhaseChange()">
+                <option [value]="undefined">-- اختر المرحلة --</option>
+                @for (phase of phases; track phase.id) {
+                  <option [value]="phase.id">{{ phase.phaseNumber }}. {{ phase.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label>حزمة العمل (اختياري)</label>
+              <select [(ngModel)]="expenseForm.workPackageId" [disabled]="!expenseForm.phaseId">
+                <option [value]="undefined">-- اختر حزمة العمل --</option>
+                @for (wp of workPackages; track wp.id) {
+                  <option [value]="wp.id">{{ wp.packageNumber }} - {{ wp.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" [(ngModel)]="expenseForm.createJournalEntry" />
+              إنشاء قيد محاسبي تلقائياً
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="cancel-btn" (click)="closeExpenseForm()">إلغاء</button>
+          <button class="save-btn" (click)="saveExpense()">حفظ المصروف</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
