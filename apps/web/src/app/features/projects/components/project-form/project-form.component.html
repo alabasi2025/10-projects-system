@@ -1,0 +1,301 @@
+<div class="form-container">
+  <!-- رأس الصفحة -->
+  <div class="page-header">
+    <div class="header-content">
+      <a routerLink="/projects" class="back-link">
+        <span>→</span> العودة للقائمة
+      </a>
+      <h1>{{ pageTitle() }}</h1>
+    </div>
+  </div>
+
+  <!-- حالة التحميل -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>جاري تحميل بيانات المشروع...</p>
+    </div>
+  }
+
+  <!-- رسالة الخطأ -->
+  @if (error()) {
+    <div class="error-banner">
+      <span class="error-icon">⚠️</span>
+      <span>{{ error() }}</span>
+      <button class="close-btn" (click)="error.set(null)">×</button>
+    </div>
+  }
+
+  <!-- النموذج -->
+  @if (!loading()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="project-form">
+      <!-- القسم الأول: المعلومات الأساسية -->
+      <div class="form-section">
+        <h2 class="section-title">المعلومات الأساسية</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="projectNumber">رقم المشروع <span class="required">*</span></label>
+            <div class="input-with-action">
+              <input
+                type="text"
+                id="projectNumber"
+                formControlName="projectNumber"
+                placeholder="مثال: PROJ-2025-001"
+                [class.invalid]="isFieldInvalid('projectNumber')"
+              />
+              <button
+                type="button"
+                class="generate-btn"
+                (click)="generateProjectNumber()"
+                title="توليد رقم تلقائي"
+              >
+                🔄
+              </button>
+            </div>
+            @if (isFieldInvalid('projectNumber')) {
+              <span class="error-text">{{ getFieldError('projectNumber') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="projectType">نوع المشروع <span class="required">*</span></label>
+            <select
+              id="projectType"
+              formControlName="projectType"
+              [class.invalid]="isFieldInvalid('projectType')"
+            >
+              @for (option of typeOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            @if (isFieldInvalid('projectType')) {
+              <span class="error-text">{{ getFieldError('projectType') }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="name">اسم المشروع <span class="required">*</span></label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            placeholder="أدخل اسم المشروع"
+            [class.invalid]="isFieldInvalid('name')"
+          />
+          @if (isFieldInvalid('name')) {
+            <span class="error-text">{{ getFieldError('name') }}</span>
+          }
+        </div>
+
+        <div class="form-group full-width">
+          <label for="description">وصف المشروع</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            placeholder="أدخل وصفاً تفصيلياً للمشروع"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- القسم الثاني: الأهداف والنطاق -->
+      <div class="form-section">
+        <h2 class="section-title">الأهداف والنطاق</h2>
+
+        <div class="form-group full-width">
+          <label for="objectives">أهداف المشروع</label>
+          <textarea
+            id="objectives"
+            formControlName="objectives"
+            placeholder="حدد الأهداف الرئيسية للمشروع"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="scope">نطاق العمل</label>
+          <textarea
+            id="scope"
+            formControlName="scope"
+            placeholder="حدد نطاق العمل والمهام المطلوبة"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div class="form-group full-width">
+          <label for="deliverables">المخرجات المتوقعة</label>
+          <textarea
+            id="deliverables"
+            formControlName="deliverables"
+            placeholder="حدد المخرجات والتسليمات المتوقعة"
+            rows="3"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- القسم الثالث: الميزانية -->
+      <div class="form-section">
+        <h2 class="section-title">الميزانية</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="estimatedBudget">الميزانية التقديرية <span class="required">*</span></label>
+            <input
+              type="number"
+              id="estimatedBudget"
+              formControlName="estimatedBudget"
+              placeholder="0"
+              min="0"
+              [class.invalid]="isFieldInvalid('estimatedBudget')"
+            />
+            @if (isFieldInvalid('estimatedBudget')) {
+              <span class="error-text">{{ getFieldError('estimatedBudget') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="approvedBudget">الميزانية المعتمدة</label>
+            <input
+              type="number"
+              id="approvedBudget"
+              formControlName="approvedBudget"
+              placeholder="0"
+              min="0"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="currency">العملة</label>
+            <select id="currency" formControlName="currency">
+              <option value="SAR">ريال سعودي (SAR)</option>
+              <option value="USD">دولار أمريكي (USD)</option>
+              <option value="EUR">يورو (EUR)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- القسم الرابع: الجدول الزمني -->
+      <div class="form-section">
+        <h2 class="section-title">الجدول الزمني</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="plannedStartDate">تاريخ البدء المخطط <span class="required">*</span></label>
+            <input
+              type="date"
+              id="plannedStartDate"
+              formControlName="plannedStartDate"
+              [class.invalid]="isFieldInvalid('plannedStartDate')"
+            />
+            @if (isFieldInvalid('plannedStartDate')) {
+              <span class="error-text">{{ getFieldError('plannedStartDate') }}</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="plannedEndDate">تاريخ الانتهاء المخطط <span class="required">*</span></label>
+            <input
+              type="date"
+              id="plannedEndDate"
+              formControlName="plannedEndDate"
+              [class.invalid]="isFieldInvalid('plannedEndDate')"
+            />
+            @if (isFieldInvalid('plannedEndDate')) {
+              <span class="error-text">{{ getFieldError('plannedEndDate') }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="actualStartDate">تاريخ البدء الفعلي</label>
+            <input
+              type="date"
+              id="actualStartDate"
+              formControlName="actualStartDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="actualEndDate">تاريخ الانتهاء الفعلي</label>
+            <input
+              type="date"
+              id="actualEndDate"
+              formControlName="actualEndDate"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="durationDays">المدة (أيام)</label>
+            <input
+              type="number"
+              id="durationDays"
+              formControlName="durationDays"
+              placeholder="يُحسب تلقائياً"
+              min="1"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- القسم الخامس: الحالة والتقدم -->
+      <div class="form-section">
+        <h2 class="section-title">الحالة والتقدم</h2>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="status">حالة المشروع</label>
+            <select id="status" formControlName="status">
+              @for (option of statusOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="progressPercent">نسبة التقدم (%)</label>
+            <input
+              type="number"
+              id="progressPercent"
+              formControlName="progressPercent"
+              placeholder="0"
+              min="0"
+              max="100"
+              [class.invalid]="isFieldInvalid('progressPercent')"
+            />
+            @if (isFieldInvalid('progressPercent')) {
+              <span class="error-text">{{ getFieldError('progressPercent') }}</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- أزرار الإجراءات -->
+      <div class="form-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onCancel()"
+          [disabled]="submitting()"
+        >
+          إلغاء
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="submitting()"
+        >
+          @if (submitting()) {
+            <span class="spinner-small"></span>
+            جاري الحفظ...
+          } @else {
+            {{ isEditMode() ? 'حفظ التغييرات' : 'إنشاء المشروع' }}
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

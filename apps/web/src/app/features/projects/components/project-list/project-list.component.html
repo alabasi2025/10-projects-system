@@ -1,0 +1,211 @@
+<div class="projects-container">
+  <!-- رأس الصفحة -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>إدارة المشاريع</h1>
+      <p>عرض وإدارة جميع المشاريع في النظام</p>
+    </div>
+    <a routerLink="/projects/new" class="btn btn-primary">
+      <span class="icon">+</span>
+      إنشاء مشروع جديد
+    </a>
+  </div>
+
+  <!-- بطاقات الإحصائيات -->
+  @if (statistics()) {
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon total">📊</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics()!.totalProjects }}</span>
+          <span class="stat-label">إجمالي المشاريع</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon draft">📝</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics()!.byStatus.draft }}</span>
+          <span class="stat-label">مسودة</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon progress">🔄</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics()!.byStatus.inProgress }}</span>
+          <span class="stat-label">قيد التنفيذ</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon completed">✅</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ statistics()!.byStatus.completed }}</span>
+          <span class="stat-label">مكتمل</span>
+        </div>
+      </div>
+      <div class="stat-card wide">
+        <div class="stat-icon budget">💰</div>
+        <div class="stat-content">
+          <span class="stat-value">{{ formatCurrency(statistics()!.financial.totalBudget) }}</span>
+          <span class="stat-label">إجمالي الميزانية</span>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- شريط البحث والفلاتر -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <input
+        type="text"
+        placeholder="البحث في المشاريع..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="onSearch()"
+      />
+      <button class="search-btn" (click)="onSearch()">🔍</button>
+    </div>
+
+    <div class="filters">
+      <select
+        [ngModel]="selectedStatus()"
+        (ngModelChange)="selectedStatus.set($event); onFilterChange()"
+      >
+        <option value="">جميع الحالات</option>
+        @for (option of statusOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+
+      <select
+        [ngModel]="selectedType()"
+        (ngModelChange)="selectedType.set($event); onFilterChange()"
+      >
+        <option value="">جميع الأنواع</option>
+        @for (option of typeOptions; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  <!-- حالة التحميل -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>جاري تحميل المشاريع...</p>
+    </div>
+  }
+
+  <!-- رسالة الخطأ -->
+  @if (error()) {
+    <div class="error-state">
+      <span class="error-icon">⚠️</span>
+      <p>{{ error() }}</p>
+      <button class="btn btn-secondary" (click)="loadProjects()">إعادة المحاولة</button>
+    </div>
+  }
+
+  <!-- قائمة المشاريع -->
+  @if (!loading() && !error()) {
+    @if (projects().length === 0) {
+      <div class="empty-state">
+        <span class="empty-icon">📁</span>
+        <h3>لا توجد مشاريع</h3>
+        <p>لم يتم العثور على أي مشاريع. ابدأ بإنشاء مشروع جديد.</p>
+        <a routerLink="/projects/new" class="btn btn-primary">إنشاء مشروع جديد</a>
+      </div>
+    } @else {
+      <div class="projects-grid">
+        @for (project of projects(); track project.id) {
+          <div class="project-card">
+            <div class="card-header">
+              <span class="project-number">{{ project.projectNumber }}</span>
+              <span
+                class="status-badge"
+                [style.background-color]="getStatusColor(project.status)"
+              >
+                {{ statusLabels[project.status] }}
+              </span>
+            </div>
+
+            <div class="card-body">
+              <h3 class="project-name">{{ project.name }}</h3>
+              <p class="project-description">{{ project.description || 'لا يوجد وصف' }}</p>
+
+              <div class="project-meta">
+                <div class="meta-item">
+                  <span class="meta-label">النوع:</span>
+                  <span class="meta-value">{{ typeLabels[project.projectType] }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">الميزانية:</span>
+                  <span class="meta-value">{{ formatCurrency(project.estimatedBudget, project.currency) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">تاريخ البدء:</span>
+                  <span class="meta-value">{{ formatDate(project.plannedStartDate) }}</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">تاريخ الانتهاء:</span>
+                  <span class="meta-value">{{ formatDate(project.plannedEndDate) }}</span>
+                </div>
+              </div>
+
+              <div class="progress-section">
+                <div class="progress-header">
+                  <span>التقدم</span>
+                  <span>{{ getProgressText(project.progressPercent) }}</span>
+                </div>
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    [style.width]="project.progressPercent + '%'"
+                    [style.background-color]="getStatusColor(project.status)"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-footer">
+              <a [routerLink]="['/projects', project.id]" class="btn btn-sm btn-secondary">
+                عرض التفاصيل
+              </a>
+              <a [routerLink]="['/projects', project.id, 'edit']" class="btn btn-sm btn-outline">
+                تعديل
+              </a>
+              <button class="btn btn-sm btn-danger" (click)="deleteProject(project)">
+                حذف
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- الترقيم -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button
+            class="page-btn"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"
+          >
+            السابق
+          </button>
+
+          <div class="page-info">
+            صفحة {{ currentPage() }} من {{ totalPages() }}
+            <span class="total-items">({{ totalItems() }} مشروع)</span>
+          </div>
+
+          <button
+            class="page-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+          >
+            التالي
+          </button>
+        </div>
+      }
+    }
+  }
+</div>

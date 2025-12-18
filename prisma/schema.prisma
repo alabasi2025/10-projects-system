@@ -1,14 +1,666 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// This is your Prisma schema file for Projects System (10)
+// Following strict rules: UUID for all PKs, proj_ prefix for all tables
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============================================
+// 1. المشاريع (Projects)
+// ============================================
+
+model ProjProject {
+  id              String   @id @default(uuid()) @db.Uuid
+  
+  // معلومات المشروع
+  projectNumber   String   @unique @map("project_number") @db.VarChar(20)
+  name            String   @db.VarChar(200)
+  description     String?  @db.Text
+  projectType     String   @map("project_type") @db.VarChar(50)
+  // 'infrastructure': بنية تحتية
+  // 'expansion': توسعة
+  // 'maintenance': صيانة كبرى
+  // 'migration': ترحيل
+  // 'solar': طاقة شمسية
+  // 'network': شبكات
+  // 'other': أخرى
+  
+  // الأهداف
+  objectives      String?  @db.Text
+  scope           String?  @db.Text
+  deliverables    String?  @db.Text
+  
+  // الميزانية
+  estimatedBudget Decimal  @map("estimated_budget") @db.Decimal(14, 2)
+  approvedBudget  Decimal? @map("approved_budget") @db.Decimal(14, 2)
+  currency        String   @default("SAR") @db.VarChar(3)
+  
+  // الجدول الزمني
+  plannedStartDate DateTime  @map("planned_start_date") @db.Date
+  plannedEndDate   DateTime  @map("planned_end_date") @db.Date
+  actualStartDate  DateTime? @map("actual_start_date") @db.Date
+  actualEndDate    DateTime? @map("actual_end_date") @db.Date
+  durationDays     Int?      @map("duration_days")
+  
+  // الحالة
+  status          String   @default("draft") @db.VarChar(20)
+  // 'draft': مسودة
+  // 'pending_approval': بانتظار الموافقة
+  // 'approved': معتمد
+  // 'in_progress': قيد التنفيذ
+  // 'on_hold': متوقف
+  // 'completed': مكتمل
+  // 'cancelled': ملغي
+  
+  // التقدم
+  progressPercent Decimal  @default(0) @map("progress_percent") @db.Decimal(5, 2)
+  
+  // المسؤولون (UUIDs من النظام الأم)
+  projectManagerId String? @map("project_manager_id") @db.Uuid
+  sponsorId        String? @map("sponsor_id") @db.Uuid
+  
+  // الموافقات
+  approvedBy String?   @map("approved_by") @db.Uuid
+  approvedAt DateTime? @map("approved_at")
+  
+  // المرفقات
+  attachments Json @default("[]")
+  
+  // التدقيق
+  createdBy String?  @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  phases       ProjProjectPhase[]
+  workPackages ProjWorkPackage[]
+  budgets      ProjProjectBudget[]
+  expenses     ProjProjectExpense[]
+  milestones   ProjProjectMilestone[]
+  baselines    ProjProjectBaseline[]
+  teamMembers  ProjProjectTeamMember[]
+  
+  @@map("proj_projects")
+}
+
+// ============================================
+// 2. أعضاء فريق المشروع (Project Team Members)
+// ============================================
+
+model ProjProjectTeamMember {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  userId    String @map("user_id") @db.Uuid
+  
+  role             String  @db.VarChar(50)
+  // 'manager': مدير المشروع
+  // 'coordinator': منسق
+  // 'supervisor': مشرف
+  // 'engineer': مهندس
+  // 'technician': فني
+  // 'inspector': فاحص
+  
+  responsibilities String?   @db.Text
+  startDate        DateTime? @map("start_date") @db.Date
+  endDate          DateTime? @map("end_date") @db.Date
+  isActive         Boolean   @default(true) @map("is_active")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  
+  // العلاقات
+  project ProjProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, userId])
+  @@map("proj_project_team_members")
+}
+
+// ============================================
+// 3. الخطط المرحلية (Project Phases)
+// ============================================
+
+model ProjProjectPhase {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  
+  phaseNumber Int    @map("phase_number")
+  name        String @db.VarChar(200)
+  description String? @db.Text
+  
+  // الميزانية
+  allocatedBudget Decimal? @map("allocated_budget") @db.Decimal(14, 2)
+  spentAmount     Decimal  @default(0) @map("spent_amount") @db.Decimal(14, 2)
+  
+  // الجدول الزمني
+  plannedStartDate DateTime  @map("planned_start_date") @db.Date
+  plannedEndDate   DateTime  @map("planned_end_date") @db.Date
+  actualStartDate  DateTime? @map("actual_start_date") @db.Date
+  actualEndDate    DateTime? @map("actual_end_date") @db.Date
+  
+  // الحالة
+  status          String  @default("pending") @db.VarChar(20)
+  progressPercent Decimal @default(0) @map("progress_percent") @db.Decimal(5, 2)
+  
+  // الترتيب
+  sequenceOrder Int @default(1) @map("sequence_order")
+  
+  // التبعيات
+  dependsOnPhaseId String? @map("depends_on_phase_id") @db.Uuid
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  project      ProjProject       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  workPackages ProjWorkPackage[]
+  expenses     ProjProjectExpense[]
+  dependsOn    ProjProjectPhase?  @relation("PhaseDependency", fields: [dependsOnPhaseId], references: [id])
+  dependents   ProjProjectPhase[] @relation("PhaseDependency")
+  
+  @@unique([projectId, phaseNumber])
+  @@map("proj_project_phases")
+}
+
+// ============================================
+// 4. حزم العمل (Work Packages)
+// ============================================
+
+model ProjWorkPackage {
+  id        String @id @default(uuid()) @db.Uuid
+  phaseId   String @map("phase_id") @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  
+  packageNumber String  @map("package_number") @db.VarChar(20)
+  name          String  @db.VarChar(200)
+  description   String? @db.Text
+  
+  // نطاق العمل
+  scopeOfWork        String? @map("scope_of_work") @db.Text
+  deliverables       String? @db.Text
+  acceptanceCriteria String? @map("acceptance_criteria") @db.Text
+  
+  // التكلفة
+  estimatedCost    Decimal? @map("estimated_cost") @db.Decimal(14, 2)
+  contractedAmount Decimal? @map("contracted_amount") @db.Decimal(14, 2)
+  actualCost       Decimal  @default(0) @map("actual_cost") @db.Decimal(14, 2)
+  
+  // الجدول الزمني
+  plannedStartDate DateTime? @map("planned_start_date") @db.Date
+  plannedEndDate   DateTime? @map("planned_end_date") @db.Date
+  actualStartDate  DateTime? @map("actual_start_date") @db.Date
+  actualEndDate    DateTime? @map("actual_end_date") @db.Date
+  durationDays     Int?      @map("duration_days")
+  
+  // الحالة
+  status          String  @default("draft") @db.VarChar(20)
+  progressPercent Decimal @default(0) @map("progress_percent") @db.Decimal(5, 2)
+  
+  // المقاول
+  contractorId String? @map("contractor_id") @db.Uuid
+  contractId   String? @map("contract_id") @db.Uuid
+  
+  // المشرف
+  supervisorId String? @map("supervisor_id") @db.Uuid
+  
+  // الفحص
+  inspectorId      String?   @map("inspector_id") @db.Uuid
+  inspectionDate   DateTime? @map("inspection_date") @db.Date
+  inspectionResult String?   @map("inspection_result") @db.VarChar(20)
+  inspectionNotes  String?   @map("inspection_notes") @db.Text
+  
+  // الموافقة والدفع
+  approvedBy     String?   @map("approved_by") @db.Uuid
+  approvedAt     DateTime? @map("approved_at")
+  paymentOrderId String?   @map("payment_order_id") @db.Uuid
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  phase     ProjProjectPhase     @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  project   ProjProject          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  materials ProjWorkPackageMaterial[]
+  expenses  ProjProjectExpense[]
+  
+  @@map("proj_work_packages")
+}
+
+// ============================================
+// 5. مواد حزمة العمل (Work Package Materials)
+// ============================================
+
+model ProjWorkPackageMaterial {
+  id            String @id @default(uuid()) @db.Uuid
+  workPackageId String @map("work_package_id") @db.Uuid
+  
+  itemId   String  @map("item_id") @db.Uuid
+  itemCode String? @map("item_code") @db.VarChar(50)
+  itemName String? @map("item_name") @db.VarChar(200)
+  
+  requiredQuantity Decimal @map("required_quantity") @db.Decimal(15, 3)
+  issuedQuantity   Decimal @default(0) @map("issued_quantity") @db.Decimal(15, 3)
+  usedQuantity     Decimal @default(0) @map("used_quantity") @db.Decimal(15, 3)
+  returnedQuantity Decimal @default(0) @map("returned_quantity") @db.Decimal(15, 3)
+  
+  unitCost  Decimal? @map("unit_cost") @db.Decimal(15, 2)
+  totalCost Decimal? @map("total_cost") @db.Decimal(15, 2)
+  
+  // ربط مع المخزون
+  stockIssueId String? @map("stock_issue_id") @db.Uuid
+  
+  notes     String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // العلاقات
+  workPackage ProjWorkPackage @relation(fields: [workPackageId], references: [id], onDelete: Cascade)
+  
+  @@map("proj_work_package_materials")
+}
+
+// ============================================
+// 6. المقاولين (Contractors)
+// ============================================
+
+model ProjContractor {
+  id String @id @default(uuid()) @db.Uuid
+  
+  contractorCode String @unique @map("contractor_code") @db.VarChar(20)
+  name           String @db.VarChar(200)
+  nameEn         String? @map("name_en") @db.VarChar(200)
+  
+  // معلومات الاتصال
+  contactPerson String? @map("contact_person") @db.VarChar(100)
+  phone         String? @db.VarChar(20)
+  email         String? @db.VarChar(100)
+  address       String? @db.Text
+  
+  // التصنيف
+  contractorType  String? @map("contractor_type") @db.VarChar(50)
+  specializations Json    @default("[]")
+  
+  // التراخيص
+  licenseNumber String?   @map("license_number") @db.VarChar(50)
+  licenseExpiry DateTime? @map("license_expiry") @db.Date
+  
+  // التقييم
+  rating            Decimal @default(0) @db.Decimal(3, 2)
+  totalProjects     Int     @default(0) @map("total_projects")
+  completedProjects Int     @default(0) @map("completed_projects")
+  
+  // الحالة
+  status String @default("active") @db.VarChar(20)
+  
+  // المالية
+  bankName    String? @map("bank_name") @db.VarChar(100)
+  bankAccount String? @map("bank_account") @db.VarChar(50)
+  iban        String? @db.VarChar(34)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  contracts ProjContract[]
+  invoices  ProjContractorInvoice[]
+  
+  @@map("proj_contractors")
+}
+
+// ============================================
+// 7. العقود (Contracts)
+// ============================================
+
+model ProjContract {
+  id String @id @default(uuid()) @db.Uuid
+  
+  contractNumber String @unique @map("contract_number") @db.VarChar(30)
+  contractorId   String @map("contractor_id") @db.Uuid
+  projectId      String? @map("project_id") @db.Uuid
+  
+  // نوع العقد
+  contractType String @map("contract_type") @db.VarChar(50)
+  // 'fixed_price': سعر ثابت
+  // 'unit_rate': أسعار وحدات
+  // 'time_material': وقت ومواد
+  // 'framework': إطاري
+  
+  // القيمة
+  contractValue Decimal @map("contract_value") @db.Decimal(14, 2)
+  currency      String  @default("SAR") @db.VarChar(3)
+  
+  // المدة
+  startDate DateTime @map("start_date") @db.Date
+  endDate   DateTime @map("end_date") @db.Date
+  
+  // الشروط
+  termsAndConditions String? @map("terms_and_conditions") @db.Text
+  paymentTerms       String? @map("payment_terms") @db.Text
+  warrantyPeriod     Int?    @map("warranty_period")
+  
+  // الحالة
+  status String @default("draft") @db.VarChar(20)
+  
+  // الموافقات
+  approvedBy String?   @map("approved_by") @db.Uuid
+  approvedAt DateTime? @map("approved_at")
+  
+  // المرفقات
+  attachments Json @default("[]")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  contractor ProjContractor      @relation(fields: [contractorId], references: [id])
+  rates      ProjContractRate[]
+  invoices   ProjContractorInvoice[]
+  
+  @@map("proj_contracts")
+}
+
+// ============================================
+// 8. أسعار العقد (Contract Rates)
+// ============================================
+
+model ProjContractRate {
+  id         String @id @default(uuid()) @db.Uuid
+  contractId String @map("contract_id") @db.Uuid
+  
+  serviceCode String  @map("service_code") @db.VarChar(50)
+  serviceName String  @map("service_name") @db.VarChar(200)
+  description String? @db.Text
+  
+  unit     String  @db.VarChar(20)
+  unitRate Decimal @map("unit_rate") @db.Decimal(15, 2)
+  
+  // الحدود
+  minQuantity Decimal? @map("min_quantity") @db.Decimal(15, 3)
+  maxQuantity Decimal? @map("max_quantity") @db.Decimal(15, 3)
+  
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // العلاقات
+  contract ProjContract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  
+  @@map("proj_contract_rates")
+}
+
+// ============================================
+// 9. مستخلصات المقاولين (Contractor Invoices)
+// ============================================
+
+model ProjContractorInvoice {
+  id           String @id @default(uuid()) @db.Uuid
+  contractorId String @map("contractor_id") @db.Uuid
+  contractId   String @map("contract_id") @db.Uuid
+  projectId    String? @map("project_id") @db.Uuid
+  
+  invoiceNumber String @unique @map("invoice_number") @db.VarChar(30)
+  invoiceDate   DateTime @map("invoice_date") @db.Date
+  
+  // المبالغ
+  grossAmount     Decimal @map("gross_amount") @db.Decimal(14, 2)
+  deductions      Decimal @default(0) @db.Decimal(14, 2)
+  retentionAmount Decimal @default(0) @map("retention_amount") @db.Decimal(14, 2)
+  netAmount       Decimal @map("net_amount") @db.Decimal(14, 2)
+  
+  // الحالة
+  status String @default("draft") @db.VarChar(20)
+  // 'draft': مسودة
+  // 'submitted': مقدم
+  // 'under_review': قيد المراجعة
+  // 'approved': موافق عليه
+  // 'rejected': مرفوض
+  // 'paid': مدفوع
+  
+  // الموافقات
+  submittedAt  DateTime? @map("submitted_at")
+  reviewedBy   String?   @map("reviewed_by") @db.Uuid
+  reviewedAt   DateTime? @map("reviewed_at")
+  approvedBy   String?   @map("approved_by") @db.Uuid
+  approvedAt   DateTime? @map("approved_at")
+  
+  // الدفع
+  paidAt         DateTime? @map("paid_at")
+  paymentOrderId String?   @map("payment_order_id") @db.Uuid
+  
+  notes     String? @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  contractor ProjContractor @relation(fields: [contractorId], references: [id])
+  contract   ProjContract   @relation(fields: [contractId], references: [id])
+  
+  @@map("proj_contractor_invoices")
+}
+
+// ============================================
+// 10. ميزانية المشروع (Project Budgets)
+// ============================================
+
+model ProjProjectBudget {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  
+  budgetVersion Int @default(1) @map("budget_version")
+  
+  // الميزانية الأصلية
+  originalBudget Decimal @map("original_budget") @db.Decimal(14, 2)
+  
+  // التعديلات
+  adjustments   Decimal @default(0) @db.Decimal(14, 2)
+  currentBudget Decimal @map("current_budget") @db.Decimal(14, 2)
+  
+  // الالتزامات
+  committedAmount Decimal @default(0) @map("committed_amount") @db.Decimal(14, 2)
+  
+  // المصروفات
+  spentAmount Decimal @default(0) @map("spent_amount") @db.Decimal(14, 2)
+  
+  // المتبقي
+  remainingBudget Decimal? @map("remaining_budget") @db.Decimal(14, 2)
+  
+  // النسب
+  commitmentPercent Decimal @default(0) @map("commitment_percent") @db.Decimal(5, 2)
+  spentPercent      Decimal @default(0) @map("spent_percent") @db.Decimal(5, 2)
+  
+  // الحالة
+  status String @default("active") @db.VarChar(20)
+  
+  approvedBy String?   @map("approved_by") @db.Uuid
+  approvedAt DateTime? @map("approved_at")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  project     ProjProject           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  allocations ProjBudgetAllocation[]
+  
+  @@unique([projectId, budgetVersion])
+  @@map("proj_project_budgets")
+}
+
+// ============================================
+// 11. توزيع الميزانية (Budget Allocations)
+// ============================================
+
+model ProjBudgetAllocation {
+  id       String @id @default(uuid()) @db.Uuid
+  budgetId String @map("budget_id") @db.Uuid
+  
+  // التوزيع
+  allocationType String @map("allocation_type") @db.VarChar(50)
+  // 'phase': خطة مرحلية
+  // 'category': فئة تكلفة
+  // 'contractor': مقاول
+  
+  referenceId   String? @map("reference_id") @db.Uuid
+  referenceName String? @map("reference_name") @db.VarChar(200)
+  
+  allocatedAmount Decimal @map("allocated_amount") @db.Decimal(14, 2)
+  spentAmount     Decimal @default(0) @map("spent_amount") @db.Decimal(14, 2)
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // العلاقات
+  budget ProjProjectBudget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  
+  @@map("proj_budget_allocations")
+}
+
+// ============================================
+// 12. مصروفات المشروع (Project Expenses)
+// ============================================
+
+model ProjProjectExpense {
+  id            String  @id @default(uuid()) @db.Uuid
+  projectId     String  @map("project_id") @db.Uuid
+  phaseId       String? @map("phase_id") @db.Uuid
+  workPackageId String? @map("work_package_id") @db.Uuid
+  
+  expenseType String @map("expense_type") @db.VarChar(50)
+  // 'contractor_payment': دفعة مقاول
+  // 'material': مواد
+  // 'labor': عمالة
+  // 'equipment': معدات
+  // 'other': أخرى
+  
+  description String? @db.Text
+  amount      Decimal @db.Decimal(14, 2)
+  
+  // المرجع
+  referenceType String? @map("reference_type") @db.VarChar(50)
+  referenceId   String? @map("reference_id") @db.Uuid
+  
+  expenseDate DateTime @map("expense_date") @db.Date
+  
+  // الربط المحاسبي
+  journalEntryId String? @map("journal_entry_id") @db.Uuid
+  
+  createdBy String?  @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // العلاقات
+  project     ProjProject       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase       ProjProjectPhase? @relation(fields: [phaseId], references: [id])
+  workPackage ProjWorkPackage?  @relation(fields: [workPackageId], references: [id])
+  
+  @@map("proj_project_expenses")
+}
+
+// ============================================
+// 13. التبعيات بين المهام (Task Dependencies)
+// ============================================
+
+model ProjTaskDependency {
+  id String @id @default(uuid()) @db.Uuid
+  
+  // المهمة التابعة
+  taskId   String @map("task_id") @db.Uuid
+  taskType String @map("task_type") @db.VarChar(50)
+  
+  // المهمة المعتمد عليها
+  dependsOnId   String @map("depends_on_id") @db.Uuid
+  dependsOnType String @map("depends_on_type") @db.VarChar(50)
+  
+  // نوع التبعية
+  dependencyType String @default("finish_to_start") @map("dependency_type") @db.VarChar(20)
+  // 'finish_to_start': FS
+  // 'start_to_start': SS
+  // 'finish_to_finish': FF
+  // 'start_to_finish': SF
+  
+  // فترة التأخير
+  lagDays Int @default(0) @map("lag_days")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("proj_task_dependencies")
+}
+
+// ============================================
+// 14. المعالم (Project Milestones)
+// ============================================
+
+model ProjProjectMilestone {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  
+  name        String  @db.VarChar(200)
+  description String? @db.Text
+  
+  // التاريخ
+  plannedDate DateTime  @map("planned_date") @db.Date
+  actualDate  DateTime? @map("actual_date") @db.Date
+  
+  // الحالة
+  status String @default("pending") @db.VarChar(20)
+  // 'pending': قادم
+  // 'achieved': تم تحقيقه
+  // 'delayed': متأخر
+  // 'at_risk': معرض للخطر
+  
+  // الربط
+  linkedTaskId   String? @map("linked_task_id") @db.Uuid
+  linkedTaskType String? @map("linked_task_type") @db.VarChar(50)
+  
+  isCritical Boolean @default(false) @map("is_critical")
+  
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // العلاقات
+  project ProjProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@map("proj_project_milestones")
+}
+
+// ============================================
+// 15. خط الأساس (Project Baselines)
+// ============================================
+
+model ProjProjectBaseline {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @map("project_id") @db.Uuid
+  
+  baselineNumber Int     @default(1) @map("baseline_number")
+  name           String? @db.VarChar(100)
+  description    String? @db.Text
+  
+  // لقطة البيانات
+  baselineData Json @map("baseline_data")
+  
+  createdBy String?  @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  // العلاقات
+  project ProjProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([projectId, baselineNumber])
+  @@map("proj_project_baselines")
+}
+
+// ============================================
+// 16. المسار الحرج (Critical Path Cache)
+// ============================================
+
+model ProjCriticalPathCache {
+  id        String @id @default(uuid()) @db.Uuid
+  projectId String @unique @map("project_id") @db.Uuid
+  
+  // المهام في المسار الحرج
+  criticalTasks Json @map("critical_tasks")
+  
+  // حسابات المسار
+  totalDuration  Int?      @map("total_duration")
+  earliestFinish DateTime? @map("earliest_finish") @db.Date
+  latestFinish   DateTime? @map("latest_finish") @db.Date
+  
+  calculatedAt DateTime @default(now()) @map("calculated_at")
+  
+  @@map("proj_critical_path_cache")
 }
