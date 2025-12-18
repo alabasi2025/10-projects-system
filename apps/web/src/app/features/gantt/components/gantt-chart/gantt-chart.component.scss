@@ -1,0 +1,598 @@
+// Variables
+$primary-color: #1976d2;
+$success-color: #28a745;
+$warning-color: #ffc107;
+$danger-color: #dc3545;
+$info-color: #17a2b8;
+$gray-100: #f8f9fa;
+$gray-200: #e9ecef;
+$gray-300: #dee2e6;
+$gray-400: #ced4da;
+$gray-500: #adb5bd;
+$gray-600: #6c757d;
+$gray-700: #495057;
+$gray-800: #343a40;
+$gray-900: #212529;
+
+.gantt-container {
+  direction: rtl;
+  padding: 20px;
+  background: $gray-100;
+  min-height: 100vh;
+}
+
+// Header
+.gantt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: $gray-800;
+    }
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+
+  .btn-back {
+    padding: 8px 16px;
+    background: $gray-200;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: $gray-300;
+    }
+  }
+
+  .zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    background: $gray-100;
+    border-radius: 6px;
+
+    span {
+      font-size: 0.85rem;
+      color: $gray-600;
+    }
+
+    button {
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid $gray-300;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+
+      &:hover {
+        background: $gray-100;
+      }
+
+      &.active {
+        background: $primary-color;
+        color: white;
+        border-color: $primary-color;
+      }
+    }
+  }
+
+  .btn-critical {
+    padding: 8px 16px;
+    background: white;
+    border: 1px solid $gray-300;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+
+    &:hover {
+      background: $gray-100;
+    }
+
+    &.active {
+      background: #fff5f5;
+      border-color: $danger-color;
+      color: $danger-color;
+    }
+  }
+
+  .btn-refresh {
+    padding: 8px 16px;
+    background: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+    }
+  }
+}
+
+// Loading, Error, Empty States
+.loading-container,
+.error-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 8px;
+  text-align: center;
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid $gray-200;
+    border-top-color: $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  .error-icon,
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+  }
+
+  p {
+    color: $gray-600;
+    margin: 10px 0 20px;
+  }
+
+  button {
+    padding: 10px 24px;
+    background: $primary-color;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+
+    &:hover {
+      background: darken($primary-color, 10%);
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Project Info
+.project-info {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+
+  .info-card {
+    flex: 1;
+    padding: 15px 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    .info-label {
+      font-size: 0.85rem;
+      color: $gray-600;
+    }
+
+    .info-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: $gray-800;
+    }
+  }
+}
+
+// Gantt Wrapper
+.gantt-wrapper {
+  display: flex;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+// Task List
+.task-list {
+  width: 350px;
+  min-width: 350px;
+  border-left: 2px solid $gray-200;
+  background: white;
+
+  .task-list-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background: $gray-100;
+    border-bottom: 1px solid $gray-200;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: $gray-700;
+  }
+
+  .task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid $gray-100;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover {
+      background: #f8f9fa;
+    }
+
+    &.selected {
+      background: #e3f2fd;
+    }
+
+    &.critical {
+      background: #fff5f5;
+
+      .task-name {
+        color: $danger-color;
+      }
+    }
+
+    .task-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      overflow: hidden;
+
+      .task-icon {
+        font-size: 1rem;
+      }
+
+      .task-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.9rem;
+      }
+    }
+
+    .task-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100px;
+
+      .progress-bar {
+        flex: 1;
+        height: 8px;
+        background: $gray-200;
+        border-radius: 4px;
+        overflow: hidden;
+
+        .progress-fill {
+          height: 100%;
+          border-radius: 4px;
+          transition: width 0.3s;
+        }
+      }
+
+      .progress-text {
+        font-size: 0.8rem;
+        color: $gray-600;
+        width: 35px;
+        text-align: left;
+      }
+    }
+  }
+}
+
+// Timeline Container
+.timeline-container {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+// Timeline Header
+.timeline-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  border-bottom: 2px solid $gray-200;
+
+  .months-row {
+    display: flex;
+    background: $gray-100;
+    border-bottom: 1px solid $gray-200;
+
+    .month-cell {
+      padding: 8px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: $gray-700;
+      border-left: 1px solid $gray-200;
+      white-space: nowrap;
+    }
+  }
+
+  .days-row {
+    display: flex;
+
+    .day-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 2px;
+      border-left: 1px solid $gray-100;
+      font-size: 0.75rem;
+      color: $gray-600;
+
+      &.weekend {
+        background: #fff3e0;
+      }
+
+      &.today {
+        background: #e3f2fd;
+        color: $primary-color;
+        font-weight: 600;
+      }
+
+      .day-number {
+        font-weight: 500;
+      }
+
+      .day-name {
+        font-size: 0.65rem;
+        color: $gray-500;
+      }
+    }
+  }
+}
+
+// Timeline Body
+.timeline-body {
+  position: relative;
+  min-height: 400px;
+
+  .grid-lines {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    pointer-events: none;
+
+    .grid-line {
+      height: 100%;
+      border-left: 1px solid $gray-100;
+
+      &.weekend {
+        background: rgba(255, 243, 224, 0.5);
+      }
+
+      &.today {
+        background: rgba(227, 242, 253, 0.5);
+        border-left: 2px solid $primary-color;
+      }
+    }
+  }
+
+  .task-bar-row {
+    position: relative;
+    border-bottom: 1px solid $gray-100;
+  }
+
+  .task-bar {
+    position: absolute;
+    top: 6px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    }
+
+    &.critical {
+      box-shadow: 0 0 0 2px $danger-color;
+    }
+
+    .task-bar-progress {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 4px 0 0 4px;
+    }
+
+    .task-bar-text {
+      position: relative;
+      padding: 0 8px;
+      font-size: 0.75rem;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: $danger-color;
+    z-index: 5;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: -4px;
+      width: 10px;
+      height: 10px;
+      background: $danger-color;
+      border-radius: 50%;
+    }
+  }
+}
+
+// Task Details Panel
+.task-details {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  h3 {
+    margin: 0 0 15px;
+    font-size: 1.1rem;
+    color: $gray-800;
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      label {
+        font-size: 0.85rem;
+        color: $gray-600;
+      }
+
+      span {
+        font-size: 1rem;
+        color: $gray-800;
+        font-weight: 500;
+
+        &.critical-badge {
+          color: $danger-color;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+}
+
+// Legend
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: $gray-700;
+
+    .legend-color {
+      width: 20px;
+      height: 12px;
+      border-radius: 3px;
+
+      &.project {
+        background: $primary-color;
+      }
+
+      &.phase {
+        background: $info-color;
+      }
+
+      &.work-package {
+        background: $success-color;
+      }
+
+      &.critical {
+        background: $danger-color;
+      }
+
+      &.today {
+        background: #e3f2fd;
+        border: 2px solid $primary-color;
+      }
+
+      &.weekend {
+        background: #fff3e0;
+      }
+    }
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .gantt-header {
+    flex-direction: column;
+    gap: 15px;
+
+    .header-right,
+    .header-left {
+      width: 100%;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+  }
+
+  .project-info {
+    flex-direction: column;
+  }
+
+  .task-list {
+    width: 250px;
+    min-width: 250px;
+  }
+}

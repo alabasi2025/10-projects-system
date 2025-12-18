@@ -44,6 +44,13 @@ export const appRoutes: Route[] = [
             (m) => m.BudgetOverviewComponent
           ),
       },
+      {
+        path: ':projectId/gantt',
+        loadComponent: () =>
+          import('./features/gantt/components/gantt-chart/gantt-chart.component').then(
+            (m) => m.GanttChartComponent
+          ),
+      },
     ],
   },
   {

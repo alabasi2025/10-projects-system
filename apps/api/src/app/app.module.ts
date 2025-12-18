@@ -8,6 +8,7 @@ import { PhasesModule } from '../modules/phases/phases.module';
 import { WorkPackagesModule } from '../modules/work-packages/work-packages.module';
 import { BudgetsModule } from '../modules/budgets/budgets.module';
 import { ExpensesModule } from '../modules/expenses/expenses.module';
+import { GanttModule } from '../modules/gantt/gantt.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { ExpensesModule } from '../modules/expenses/expenses.module';
     WorkPackagesModule,
     BudgetsModule,
     ExpensesModule,
+    GanttModule,
   ],
   controllers: [AppController],
   providers: [AppService],

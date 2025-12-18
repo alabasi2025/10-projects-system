@@ -1,0 +1,284 @@
+<div class="gantt-container">
+  <!-- Header -->
+  <div class="gantt-header">
+    <div class="header-right">
+      <button class="btn-back" (click)="goBack()">
+        ← العودة للمشاريع
+      </button>
+      <h1>مخطط جانت</h1>
+    </div>
+    <div class="header-left">
+      <div class="zoom-controls">
+        <span>التكبير:</span>
+        <button
+          [class.active]="zoomLevel() === 'day'"
+          (click)="setZoomLevel('day')"
+        >
+          يوم
+        </button>
+        <button
+          [class.active]="zoomLevel() === 'week'"
+          (click)="setZoomLevel('week')"
+        >
+          أسبوع
+        </button>
+        <button
+          [class.active]="zoomLevel() === 'month'"
+          (click)="setZoomLevel('month')"
+        >
+          شهر
+        </button>
+      </div>
+      <button
+        class="btn-critical"
+        [class.active]="showCriticalPath()"
+        (click)="toggleCriticalPath()"
+      >
+        {{ showCriticalPath() ? '🔴 إخفاء المسار الحرج' : '⚪ إظهار المسار الحرج' }}
+      </button>
+      <button class="btn-refresh" (click)="refresh()">
+        🔄 تحديث
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>جاري تحميل مخطط جانت...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <span class="error-icon">⚠️</span>
+      <p>{{ error() }}</p>
+      <button (click)="refresh()">إعادة المحاولة</button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && !error() && tasks().length === 0) {
+    <div class="empty-container">
+      <span class="empty-icon">📊</span>
+      <h3>لا توجد بيانات</h3>
+      <p>لم يتم العثور على مراحل أو حزم عمل لهذا المشروع</p>
+      <button (click)="goBack()">العودة للمشاريع</button>
+    </div>
+  }
+
+  <!-- Gantt Chart -->
+  @if (!loading() && !error() && tasks().length > 0) {
+    <!-- Project Info -->
+    <div class="project-info">
+      @if (criticalPath()) {
+        <div class="info-card">
+          <span class="info-label">مدة المشروع</span>
+          <span class="info-value">{{ projectDuration() }} يوم</span>
+        </div>
+        <div class="info-card">
+          <span class="info-label">المهام الحرجة</span>
+          <span class="info-value">{{ criticalTasks().length }}</span>
+        </div>
+        <div class="info-card">
+          <span class="info-label">تاريخ الانتهاء المتوقع</span>
+          <span class="info-value">{{ criticalPath()?.projectEndDate | date:'yyyy/MM/dd' }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="gantt-wrapper">
+      <!-- Task List (Left Panel) -->
+      <div class="task-list">
+        <div class="task-list-header">
+          <span>المهمة</span>
+          <span>التقدم</span>
+        </div>
+        @for (task of tasks(); track task.id) {
+          <div
+            class="task-row"
+            [class.selected]="selectedTask()?.id === task.id"
+            [class.critical]="showCriticalPath() && criticalTasks().includes(task.id)"
+            [style.padding-right.px]="getTaskIndent(task) + 10"
+            (click)="selectTask(task)"
+          >
+            <div class="task-name">
+              <span class="task-icon">{{ getTaskIcon(task) }}</span>
+              <span class="task-text">{{ task.text }}</span>
+            </div>
+            <div class="task-progress">
+              <div class="progress-bar">
+                <div
+                  class="progress-fill"
+                  [style.width.%]="task.progress * 100"
+                  [style.background-color]="getTaskColor(task)"
+                ></div>
+              </div>
+              <span class="progress-text">{{ (task.progress * 100).toFixed(0) }}%</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Timeline (Right Panel) -->
+      <div class="timeline-container" #ganttContainer>
+        <!-- Timeline Header -->
+        <div class="timeline-header">
+          <!-- Months Row -->
+          <div class="months-row">
+            @for (month of getTimelineMonths(); track month.month + '-' + month.year) {
+              <div
+                class="month-cell"
+                [style.width.px]="month.days * dayWidth()"
+              >
+                {{ getMonthName(month.month) }} {{ month.year }}
+              </div>
+            }
+          </div>
+          <!-- Days Row -->
+          <div class="days-row">
+            @for (day of getTimelineDays(); track day.toISOString()) {
+              <div
+                class="day-cell"
+                [class.weekend]="isWeekend(day)"
+                [class.today]="isToday(day)"
+                [style.width.px]="dayWidth()"
+              >
+                <span class="day-number">{{ day.getDate() }}</span>
+                @if (zoomLevel() === 'day') {
+                  <span class="day-name">{{ getDayName(day) }}</span>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Timeline Body -->
+        <div class="timeline-body">
+          <!-- Grid Lines -->
+          <div class="grid-lines">
+            @for (day of getTimelineDays(); track day.toISOString()) {
+              <div
+                class="grid-line"
+                [class.weekend]="isWeekend(day)"
+                [class.today]="isToday(day)"
+                [style.width.px]="dayWidth()"
+              ></div>
+            }
+          </div>
+
+          <!-- Task Bars -->
+          @for (task of tasks(); track task.id; let i = $index) {
+            <div
+              class="task-bar-row"
+              [style.height.px]="rowHeight"
+            >
+              <div
+                class="task-bar"
+                [class.critical]="showCriticalPath() && criticalTasks().includes(task.id)"
+                [style.left.px]="getTaskLeft(task)"
+                [style.width.px]="getTaskWidth(task)"
+                [style.background-color]="getTaskColor(task)"
+                (click)="selectTask(task)"
+              >
+                <div
+                  class="task-bar-progress"
+                  [style.width.px]="getProgressWidth(task)"
+                ></div>
+                <span class="task-bar-text">{{ task.text }}</span>
+              </div>
+            </div>
+          }
+
+          <!-- Today Line -->
+          <div class="today-line-container">
+            <!-- خط اليوم الحالي يتم رسمه في CSS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Task Details Panel -->
+    @if (selectedTask()) {
+      <div class="task-details">
+        <h3>تفاصيل المهمة</h3>
+        <div class="details-grid">
+          <div class="detail-item">
+            <label>الاسم:</label>
+            <span>{{ selectedTask()?.text }}</span>
+          </div>
+          <div class="detail-item">
+            <label>النوع:</label>
+            <span>
+              @switch (selectedTask()?.type) {
+                @case ('project') { مشروع }
+                @case ('phase') { مرحلة }
+                @case ('work_package') { حزمة عمل }
+              }
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>تاريخ البدء:</label>
+            <span>{{ selectedTask()?.start_date | date:'yyyy/MM/dd' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>تاريخ الانتهاء:</label>
+            <span>{{ selectedTask()?.end_date | date:'yyyy/MM/dd' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>المدة:</label>
+            <span>{{ selectedTask()?.duration }} يوم</span>
+          </div>
+          <div class="detail-item">
+            <label>نسبة الإنجاز:</label>
+            <span>{{ ((selectedTask()?.progress || 0) * 100).toFixed(0) }}%</span>
+          </div>
+          @if (showCriticalPath() && selectedTask()) {
+            <div class="detail-item">
+              <label>الفائض (Slack):</label>
+              <span>{{ getSlack(selectedTask()!.id) }} يوم</span>
+            </div>
+            <div class="detail-item">
+              <label>مهمة حرجة:</label>
+              <span [class.critical-badge]="criticalTasks().includes(selectedTask()!.id)">
+                {{ criticalTasks().includes(selectedTask()!.id) ? 'نعم' : 'لا' }}
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color project"></span>
+        <span>مشروع</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color phase"></span>
+        <span>مرحلة</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color work-package"></span>
+        <span>حزمة عمل</span>
+      </div>
+      @if (showCriticalPath()) {
+        <div class="legend-item">
+          <span class="legend-color critical"></span>
+          <span>مهمة حرجة</span>
+        </div>
+      }
+      <div class="legend-item">
+        <span class="legend-color today"></span>
+        <span>اليوم</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color weekend"></span>
+        <span>عطلة نهاية الأسبوع</span>
+      </div>
+    </div>
+  }
+</div>

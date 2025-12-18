@@ -492,9 +492,23 @@ export class PhasesService {
   async getStatistics(projectId?: string) {
     const where: Prisma.ProjProjectPhaseWhereInput = projectId ? { projectId } : {};
 
-    const [total, byStatus, budgetStats] = await Promise.all([
+    const [total, byStatus] = await Promise.all([
       this.prisma.projProjectPhase.count({ where }),
       this.prisma.projProjectPhase.groupBy({
         by: ['status'],
         where,
         _count: { status: true },
+      }),
+    ]);
+
+    const statusCounts: { [key: string]: number } = {};
+    for (const item of byStatus) {
+      statusCounts[item.status] = item._count.status;
+    }
+
+    return {
+      total,
+      byStatus: statusCounts,
+    };
+  }
+}
